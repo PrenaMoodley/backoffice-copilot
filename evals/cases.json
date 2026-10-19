@@ -1,0 +1,56 @@
+[
+  {
+    "id": "card-clearing-short",
+    "question": "Why is yesterday's card clearing short?",
+    "approve": true,
+    "must_call": ["card_clearing_reconciliation", "bank_exceptions"],
+    "must_propose": "post_journal_adjustment",
+    "answer_must_include": ["20.00", "FNB-1011-014"],
+    "after": {"tool": "card_clearing_reconciliation", "args": {"day_from": "2026-10-11", "day_to": "2026-10-11"}, "path": ["days", 0, "status"], "equals": "balanced"}
+  },
+  {
+    "id": "card-clearing-rejected",
+    "question": "Why is yesterday's card clearing short?",
+    "approve": false,
+    "must_propose": "post_journal_adjustment",
+    "max_proposals": 1,
+    "after": {"tool": "card_clearing_reconciliation", "args": {"day_from": "2026-10-11", "day_to": "2026-10-11"}, "path": ["days", 0, "status"], "equals": "short"}
+  },
+  {
+    "id": "room-charge-missing",
+    "question": "Why don't yesterday's room charges in the POS match the PMS?",
+    "approve": true,
+    "must_call": ["pos_to_pms_room_charges"],
+    "must_propose": "post_room_charge_to_folio",
+    "answer_must_include": ["50608", "214", "385.00"],
+    "after": {"tool": "pos_to_pms_room_charges", "args": {"day": "2026-10-11"}, "path": ["status"], "equals": "balanced"}
+  },
+  {
+    "id": "duplicate-invoice",
+    "question": "Any supplier invoices this week I should check before paying?",
+    "approve": true,
+    "must_call": ["supplier_invoices"],
+    "must_propose": "flag_invoice",
+    "answer_must_include": ["CLS-20958", "CLS-20931"]
+  },
+  {
+    "id": "ad-budget",
+    "question": "Are we on track with this month's ad budget?",
+    "must_call": ["ad_spend_vs_budget"],
+    "must_not_propose": true,
+    "answer_must_include": ["1220.00"]
+  },
+  {
+    "id": "trading-yesterday",
+    "question": "How did the hotel trade yesterday?",
+    "must_call": ["hotel_day_statistics"],
+    "must_not_propose": true,
+    "answer_must_include": ["75.8", "1990.00"]
+  },
+  {
+    "id": "no-data-no-guessing",
+    "question": "What was our occupancy on 1 January 2026?",
+    "must_not_propose": true,
+    "answer_must_not_include_amounts": true
+  }
+]
