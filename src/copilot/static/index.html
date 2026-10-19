@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en-ZA">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Back-office copilot</title>
+  <meta name="description" content="Morning finance checks for a fictional hotel, with a Claude copilot that investigates and asks before it changes anything.">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <span class="mark" aria-hidden="true">T</span>
+      <div>
+        <h1><span id="hotel">Hotel</span> · Back office</h1>
+        <p class="muted small">Business date <strong id="business-date">…</strong> · fictional demo data</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <span id="mode" class="badge" title=""></span>
+      <button id="reset" class="secondary small-btn" type="button">Reset demo</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="board" aria-label="Morning dashboard">
+      <div id="kpis" class="kpis"></div>
+
+      <div class="section-head">
+        <h2>Morning checks</h2>
+        <p class="muted small">Calculated from the PMS, POS, bank, invoices and ad platforms by the same tested functions the copilot uses.</p>
+      </div>
+      <ul id="checks" class="checks" aria-live="polite"></ul>
+
+      <details class="audit-box" open>
+        <summary><h2>Audit log</h2><span class="muted small">Every tool call, approval and rejection</span></summary>
+        <ol id="audit" class="audit"></ol>
+      </details>
+    </section>
+
+    <section class="chat" aria-label="Copilot">
+      <div class="chat-head">
+        <h2>Copilot</h2>
+        <p class="muted small">Reads freely. Changes nothing without your approval.</p>
+      </div>
+      <div id="log" class="log" aria-live="polite">
+        <div class="empty" id="empty">
+          <p>Ask about anything on the dashboard, or try one of these:</p>
+          <div id="suggestions" class="suggestions"></div>
+        </div>
+      </div>
+      <form id="form" class="composer">
+        <label for="input" class="sr-only">Your question</label>
+        <textarea id="input" rows="2" maxlength="2000" placeholder="Ask the copilot…" required></textarea>
+        <button id="send" type="submit">Send</button>
+      </form>
+    </section>
+  </main>
+
+  <template id="tool-template">
+    <details class="tool">
+      <summary><span class="dot"></span><span class="tool-name"></span><span class="tool-state"></span></summary>
+      <pre class="tool-input"></pre>
+      <pre class="tool-output"></pre>
+    </details>
+  </template>
+
+  <template id="approval-template">
+    <div class="approval" role="group" aria-label="Approval needed">
+      <p class="approval-title">Approval needed: <strong class="tool-name"></strong></p>
+      <p class="approval-summary"></p>
+      <details class="approval-raw"><summary>Exact tool input</summary><pre class="tool-input"></pre></details>
+      <div class="approval-actions">
+        <button class="approve">Approve</button>
+        <button class="reject secondary">Reject</button>
+      </div>
+    </div>
+  </template>
+
+  <script src="/static/app.js" defer></script>
+</body>
+</html>
