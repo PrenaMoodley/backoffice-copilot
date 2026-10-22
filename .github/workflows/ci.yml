@@ -23,3 +23,39 @@ jobs:
       - run: pytest -q
       - name: Evaluation set (recorded answers)
         run: python -m copilot.evals --out eval-report.md && cat eval-report.md >> "$GITHUB_STEP_SUMMARY"
+
+  docker:
+    # Prove the image builds, starts as it would on a host, and passes its own health check
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t backoffice-copilot:ci .
+      - name: Start container (demo mode, no API key)
+        run: docker run -d --name copilot -p 8000:8000 -e COPILOT_MODE=demo backoffice-copilot:ci
+      - name: Wait for /health
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:8000/health; then echo; exit 0; fi
+            sleep 2
+          done
+          echo "Container never became healthy"; exit 1
+      - name: Smoke test the dashboard API
+        run: |
+          curl -fsS http://localhost:8000/ > /dev/null
+          curl -fsS http://localhost:8000/api/overview | python3 -c "import json,sys; o=json.load(sys.stdin); assert o['mode']=='demo' and len(o['checks'])==6, o; print('overview ok:', [c['status'] for c in o['checks']])"
+      - name: Docker's own HEALTHCHECK reports healthy
+        run: |
+          for i in $(seq 1 30); do
+            status=$(docker inspect --format '{{.State.Health.Status}}' copilot)
+            echo "health: $status"
+            [ "$status" = "healthy" ] && exit 0
+            sleep 3
+          done
+          exit 1
+      - name: Container runs as a non-root user
+        run: test "$(docker exec copilot id -u)" != "0"
+      - name: Container logs
+        if: always()
+        run: docker logs copilot
