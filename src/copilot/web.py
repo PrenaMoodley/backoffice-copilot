@@ -13,14 +13,15 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import sqlite3
 import uuid
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, closing
 from datetime import date, timedelta
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -60,7 +61,9 @@ def sse(events: AsyncIterator[dict], first: dict | None = None) -> StreamingResp
             yield f"data: {json.dumps(event, default=str)}\n\n"
         yield 'data: {"type": "done"}\n\n'
 
-    return StreamingResponse(stream(), media_type="text/event-stream", headers={"Cache-Control": "no-cache"})
+    # X-Accel-Buffering stops nginx-style reverse proxies holding the stream back until it ends
+    headers = {"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
+    return StreamingResponse(stream(), media_type="text/event-stream", headers=headers)
 
 
 async def one(event: dict) -> AsyncIterator[dict]:
@@ -127,6 +130,24 @@ def create_app(agent: Agent | None = None, mode: str | None = None) -> FastAPI:
     @app.get("/")
     def index() -> FileResponse:
         return FileResponse(STATIC / "index.html")
+
+    @app.get("/health")
+    async def health() -> JSONResponse:
+        """For the host's health checks and uptime monitoring: 200 when the app can read its
+        database and its MCP server answers, 503 with what failed when it can't."""
+        problems = []
+        try:
+            uri = Path(mcp_server.DB_PATH).resolve().as_uri() + "?mode=ro"
+            with closing(sqlite3.connect(uri, uri=True)) as con:
+                con.execute("SELECT 1 FROM accounts LIMIT 1").fetchone()
+        except sqlite3.Error:
+            problems.append("database unreadable")
+        try:
+            await asyncio.wait_for(state["agent"].backend.list_tools(), timeout=5)
+        except Exception:  # any failure here means the copilot can't use its tools
+            problems.append("MCP server not responding")
+        body = {"status": "unavailable" if problems else "ok", "mode": mode, "problems": problems}
+        return JSONResponse(body, status_code=503 if problems else 200)
 
     @app.get("/api/overview")
     def overview() -> dict:
