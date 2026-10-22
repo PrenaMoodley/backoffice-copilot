@@ -77,6 +77,27 @@ def test_overview_and_reset(tmp_path, demo_db):
         assert client.get("/api/audit").json() == []
 
 
+def test_health_reports_ok_and_what_failed(tmp_path, monkeypatch):
+    agent = Agent(InProcessBackend(), AuditLog(tmp_path / "a.jsonl"), client=ScriptedClaude())
+    with TestClient(create_app(agent, mode="demo")) as client:
+        r = client.get("/health")
+        assert r.status_code == 200
+        assert r.json() == {"status": "ok", "mode": "demo", "problems": []}
+
+        monkeypatch.setattr(web.mcp_server, "DB_PATH", tmp_path / "missing.db")
+        r = client.get("/health")
+        assert r.status_code == 503
+        assert r.json()["problems"] == ["database unreadable"]
+        assert not (tmp_path / "missing.db").exists()  # a health check must not create the database
+
+
+def test_streams_ask_proxies_not_to_buffer(tmp_path):
+    agent = Agent(InProcessBackend(), AuditLog(tmp_path / "a.jsonl"), client=FakeClaude(reply([text("Hi")])))
+    with TestClient(create_app(agent, mode="demo")) as client:
+        r = client.post("/api/chat", json={"message": "Hello"})
+        assert r.headers["x-accel-buffering"] == "no"
+
+
 def test_live_mode_caps_messages_per_session(tmp_path, monkeypatch):
     monkeypatch.setattr(web, "MESSAGES_PER_SESSION", 1)
     claude = FakeClaude(reply([text("First answer.")]))
