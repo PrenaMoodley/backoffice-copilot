@@ -13,6 +13,7 @@ back-office data (`mcp_server.py`), dashboard checks built on the same functions
 - Evals: `python -m copilot.evals` (recorded), `python -m copilot.evals --live` (needs `ANTHROPIC_API_KEY`)
 - Lint: `python -m ruff check . && python -m ruff format --check .`
 - Run: `uvicorn copilot.web:app` (demo mode unless `ANTHROPIC_API_KEY` is set)
+- Container: `docker build -t backoffice-copilot . && docker run -p 8000:8000 backoffice-copilot`, then `curl localhost:8000/health`
 
 ## Rules
 
@@ -36,3 +37,7 @@ back-office data (`mcp_server.py`), dashboard checks built on the same functions
   description or the model, and add a case to `evals/cases.json` for every new planted problem.
 - Demo data in `data.py` is fictional. Keep the planted problems; the tests and evals rely on them.
 - Don't name real hotels, suppliers or guests anywhere in the repo.
+- `/health` stays read-only and fast, and reports what failed. If you add a dependency the
+  app can't work without, add it to the health check.
+- Update `docs/RUNBOOK.md` when you add a failure mode, a setting or an environment variable.
+  Secrets go in the host's secret store, never in the image, the repo or a log line.

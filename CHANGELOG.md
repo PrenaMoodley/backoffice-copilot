@@ -7,6 +7,20 @@
 - Sign-in with Microsoft Entra ID; approvals record the signed-in user and check their role.
 - Connect the MCP tools to PostgreSQL and the real integrations (pos-to-ledger, recon-dashboard, m365-mail-intake, marketing-spend-sync).
 - Schedule the morning checks and email finance a summary.
+- Deploy the public demo (Render) and add an uptime monitor on `/health`.
+
+## [0.2.1] - 2026-10-22
+
+### Added
+- `GET /health`: 200 when the database is readable and the MCP server answers; 503 with the reason when not. Read-only: it never creates the database.
+- Docker `HEALTHCHECK` on `/health`; the image reads `PORT` from the host and logs unbuffered to stdout.
+- CI job that builds the Docker image, starts it in demo mode, waits for `/health`, smoke-tests the dashboard API, and checks Docker reports it healthy and that it runs as non-root.
+- Dependabot: weekly grouped update PRs for Python packages, GitHub Actions and the Docker base image.
+- `docs/RUNBOOK.md`: health check, settings, common failures, deploy and roll back, scaling limits, secrets.
+- `.dockerignore` so tests, docs and local files stay out of the build context.
+
+### Changed
+- Streaming responses send `X-Accel-Buffering: no` so reverse proxies don't hold them back.
 
 ## [0.2.0] - 2026-10-19
 

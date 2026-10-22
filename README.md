@@ -63,7 +63,8 @@ can never disagree about a number.
 | **Rejection is respected** | A rejected action goes back to Claude as "the user rejected this", and it isn't proposed again. |
 | **Live mode can't run up a bill** | Messages are capped per conversation and per day. Set a spending limit on the API key as well. |
 
-More detail in [`docs/DESIGN.md`](docs/DESIGN.md). How I'd scope this for a real hotel,
+More detail in [`docs/DESIGN.md`](docs/DESIGN.md); how to support it in
+[`docs/RUNBOOK.md`](docs/RUNBOOK.md). How I'd scope this for a real hotel,
 written for the finance manager who'd sign it off: [`docs/SCOPE.md`](docs/SCOPE.md).
 
 ## Evaluation set
@@ -123,6 +124,10 @@ claude mcp add backoffice -- python -m copilot.mcp_server
 ## Deploy
 
 The [`Dockerfile`](Dockerfile) runs anywhere that runs containers (Render, Fly.io, a VPS).
+It runs as a non-root user, reads `PORT` from the host, and has a `HEALTHCHECK` on
+`/health`, which returns 503 with the reason when the database or MCP server is down.
+On every push, CI builds the image, starts it, and waits for it to report healthy.
+Support and roll-back steps: [`docs/RUNBOOK.md`](docs/RUNBOOK.md).
 
 - **Public demo:** set `COPILOT_MODE=demo`. No API key, no cost. Visitors share one demo
   database; **Reset demo** puts the planted problems back.

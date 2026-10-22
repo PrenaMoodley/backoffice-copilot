@@ -1,6 +1,6 @@
 [project]
 name = "backoffice-copilot"
-version = "0.2.0"
+version = "0.2.1"
 description = "Morning finance checks for a hotel, with a Claude agent that investigates through MCP tools and asks before it changes anything."
 readme = "README.md"
 requires-python = ">=3.11"
