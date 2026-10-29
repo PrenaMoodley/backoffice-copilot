@@ -5,7 +5,7 @@ description = "Morning finance checks for a hotel, with a Claude agent that inve
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "anthropic>=1.13,<2",
+    "anthropic>=1.13,<3",
     "mcp>=2.3,<3",
     "fastapi>=0.115,<1",
     "uvicorn[standard]>=0.30",
