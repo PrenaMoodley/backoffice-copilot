@@ -1,4 +1,4 @@
-FROM python:3.13-slim
+FROM python:3.15-slim
 
 # Logs straight to stdout so the host's log viewer sees them; no .pyc files in the image
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
